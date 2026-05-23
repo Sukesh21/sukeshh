@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login & Signup</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:linear-gradient(135deg,#4facfe,#00f2fe);
+    }
+
+    .container{
+      width:350px;
+      background:#fff;
+      padding:30px;
+      border-radius:15px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:20px;
+      color:#333;
+    }
+
+    .input-box{
+      margin-bottom:15px;
+    }
+
+    .input-box input{
+      width:100%;
+      padding:12px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      outline:none;
+      font-size:16px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#4facfe;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    button:hover{
+      background:#00c6fb;
+    }
+
+    .toggle{
+      text-align:center;
+      margin-top:15px;
+      cursor:pointer;
+      color:#555;
+    }
+
+    .message{
+      text-align:center;
+      margin-top:10px;
+      font-weight:bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2 id="title">Signup</h2>
+
+  <div class="input-box">
+    <input type="text" id="name" placeholder="Enter Name">
+  </div>
+
+  <div class="input-box">
+    <input type="text" id="phone" placeholder="Enter Phone Number">
+  </div>
+
+  <div class="input-box">
+    <input type="email" id="email" placeholder="Enter Email">
+  </div>
+
+  <div class="input-box">
+    <input type="password" id="password" placeholder="Enter Password">
+  </div>
+
+  <button id="submitBtn">Signup</button>
+
+  <div class="toggle" id="toggleText">
+    Already have an account? Login
+  </div>
+
+  <div class="message" id="message"></div>
+
+</div>
+
+<script>
+
+  // ==========================
+  // ADD YOUR SUPABASE DETAILS
+  // ==========================
+
+  const SUPABASE_URL = "https://gaipuifhnmflwepdzgtm.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_QU_jQtwjBaiWjCLQIF6AwQ_ELK-tzcU";
+
+  const client = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  let isSignup = true;
+
+  const title = document.getElementById("title");
+  const submitBtn = document.getElementById("submitBtn");
+  const toggleText = document.getElementById("toggleText");
+  const message = document.getElementById("message");
+
+  toggleText.addEventListener("click", () => {
+
+    isSignup = !isSignup;
+
+    if(isSignup){
+      title.innerText = "Signup";
+      submitBtn.innerText = "Signup";
+      toggleText.innerText = "Already have an account? Login";
+    }else{
+      title.innerText = "Login";
+      submitBtn.innerText = "Login";
+      toggleText.innerText = "Don't have an account? Signup";
+    }
+
+    message.innerText = "";
+  });
+
+  submitBtn.addEventListener("click", async () => {
+
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if(!email || !password){
+      message.innerText = "Please fill all fields";
+      message.style.color = "red";
+      return;
+    }
+
+    if(isSignup){
+
+      const { data, error } = await client.auth.signUp({
+        email: email,
+        password: password
+      });
+
+      if(error){
+        message.innerText = error.message;
+        message.style.color = "red";
+      }else{
+
+        await client.from("users").insert([
+          {
+            id: data.user.id,
+            name: name,
+            phone: phone,
+            email: email
+          }
+        ]);
+
+        message.innerText = "Signup Successful";
+        message.style.color = "green";
+      }
+
+    }else{
+
+      const { error } = await client.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if(error){
+        message.innerText = error.message;
+        message.style.color = "red";
+      }else{
+        message.innerText = "Login Successful";
+        message.style.color = "green";
+      }
+    }
+
+  });
+
+</script>
+
+</body>
+</html>
